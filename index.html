@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Real-Time Mental Health Monitoring Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,12 +22,13 @@
             margin-bottom: 40px;
         }
 
-        .feed, .stats {
+        .feed,
+        .stats {
             background: white;
             padding: 20px;
             border-radius: 10px;
             width: 50%;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         ul {
@@ -51,103 +53,124 @@
 
 <body>
 
-<h1>Real-Time Mental Health Monitoring Dashboard</h1>
+    <h1>Real-Time Mental Health Monitoring Dashboard</h1>
 
-<div class="container">
-    <div class="feed">
-        <h2>Live Stream</h2>
-        <ul id="stream"></ul>
+    <div class="container">
+        <div class="feed">
+            <h2>Live Stream</h2>
+            <ul id="stream"></ul>
+        </div>
+
+        <div class="stats">
+            <h2>Category Counts</h2>
+            <p>Stress: <span id="stress">0</span></p>
+            <p>Anxiety: <span id="anxiety">0</span></p>
+            <p>Sadness: <span id="sadness">0</span></p>
+            <p>Burnout: <span id="burnout">0</span></p>
+            <h3 id="alert"></h3>
+        </div>
     </div>
 
-    <div class="stats">
-        <h2>Category Counts</h2>
-        <p>Stress: <span id="stress">0</span></p>
-        <p>Anxiety: <span id="anxiety">0</span></p>
-        <p>Sadness: <span id="sadness">0</span></p>
-        <p>Burnout: <span id="burnout">0</span></p>
-        <h3 id="alert"></h3>
+    <div style="width: 500px; margin: auto;">
+        <canvas id="trendChart"></canvas>
     </div>
-</div>
 
-<div style="width: 500px; margin: auto;">
-    <canvas id="trendChart"></canvas>
-</div>
+    <script>
+        const messages = [
+            "I feel very stressed about exams",
+            "Life feels overwhelming and anxious",
+            "I am exhausted and burned out",
+            "I feel hopeless and sad",
+            "I am nervous about results",
+            "I am happy today",
+            "Too much pressure from assignments",
+            "I feel completely drained and tired",
+            "I'm panicking about deadlines"
+        ];
 
-<script>
-    const messages = [
-        "I feel very stressed about exams",
-        "Life feels overwhelming and anxious",
-        "I am exhausted and burned out",
-        "I feel hopeless and sad",
-        "I am nervous about results",
-        "I am happy today",
-        "Too much pressure from assignments",
-        "I feel completely drained and tired",
-        "I'm panicking about deadlines"
-    ];
+        let counts = {
+            stress: 0,
+            anxiety: 0,
+            sadness: 0,
+            burnout: 0
+        };
 
-    let counts = {
-        stress: 0,
-        anxiety: 0,
-        sadness: 0,
-        burnout: 0
-    };
-
-    function classify(text) {
-        text = text.toLowerCase();
-        if (text.includes("stress") || text.includes("pressure")) return "stress";
-        if (text.includes("anxious") || text.includes("nervous") || text.includes("panic")) return "anxiety";
-        if (text.includes("sad") || text.includes("hopeless")) return "sadness";
-        if (text.includes("exhausted") || text.includes("burned") || text.includes("tired") || text.includes("drained")) return "burnout";
-        return "neutral";
-    }
-
-    const stream = document.getElementById("stream");
-
-    const ctx = document.getElementById("trendChart").getContext("2d");
-
-    const chart = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: [],
-            datasets: [{
-                label: "Stress Trend",
-                data: [],
-                borderColor: "red",
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            animation: false
-        }
-    });
-
-    function simulateStream() {
-
-        const msg = messages[Math.floor(Math.random() * messages.length)];
-        const category = classify(msg);
-
-        const li = document.createElement("li");
-        li.textContent = msg + "  →  " + category.toUpperCase();
-        stream.prepend(li);
-
-        if (counts[category] !== undefined) {
-            counts[category]++;
-            document.getElementById(category).textContent = counts[category];
+        function classify(text) {
+            text = text.toLowerCase();
+            if (text.includes("stress") || text.includes("pressure")) return "stress";
+            if (text.includes("anxious") || text.includes("nervous") || text.includes("panic")) return "anxiety";
+            if (text.includes("sad") || text.includes("hopeless")) return "sadness";
+            if (text.includes("exhausted") || text.includes("burned") || text.includes("tired") || text.includes("drained")) return "burnout";
+            return "neutral";
         }
 
-        chart.data.labels.push("");
-        chart.data.datasets[0].data.push(counts.stress);
-        chart.update();
+        const stream = document.getElementById("stream");
 
-        if (counts.stress >= 5) {
-            document.getElementById("alert").textContent = "⚠ ALERT: Stress Spike Detected!";
+        const ctx = document.getElementById("trendChart").getContext("2d");
+
+        const chart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "Stress Trend",
+                    data: [],
+                    borderColor: "red",
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: false
+            }
+        });
+
+        function simulateStream() {
+
+            const msg = messages[Math.floor(Math.random() * messages.length)];
+            const category = classify(msg);
+            const timestamp = new Date().toISOString();
+
+            // Display in live feed
+            const li = document.createElement("li");
+            li.textContent = `[${new Date().toLocaleTimeString()}]  ${msg}  →  ${category.toUpperCase()}`;
+            stream.prepend(li);
+
+            // Update counts
+            if (counts[category] !== undefined) {
+                counts[category]++;
+                document.getElementById(category).textContent = counts[category];
+            }
+
+            // Update graph (Stress trend example)
+            chart.data.labels.push("");
+            chart.data.datasets[0].data.push(counts.stress);
+            chart.update();
+
+            // Spike detection
+            if (counts.stress >= 5) {
+                document.getElementById("alert").textContent = "⚠ ALERT: Stress Spike Detected!";
+            }
+
+            // 🔥 Send data to backend (MongoDB)
+            fetch("http://localhost:5000/save", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text: msg,
+                    category: category,
+                    timestamp: timestamp
+                })
+            })
+                .then(response => response.json())
+                .then(data => console.log("Saved:", data))
+                .catch(error => console.error("Error saving:", error));
         }
-    }
-
-    setInterval(simulateStream, 2000);
-</script>
+        setInterval(simulateStream, 2000);
+    </script>
 
 </body>
+
 </html>

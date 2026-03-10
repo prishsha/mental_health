@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 // 🔥 REPLACE THIS WITH YOUR MONGODB ATLAS CONNECTION STRING
-mongoose.connect("YOUR_MONGODB_ATLAS_CONNECTION_STRING");
+mongoose.connect("");
 
 const MessageSchema = new mongoose.Schema({
     text: String,
